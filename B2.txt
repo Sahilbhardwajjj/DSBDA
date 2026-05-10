@@ -1,1 +1,307 @@
+🌫️ Assignment B2 (Air) – Air Quality Dataset
 
+Python
+import pandas as pd
+import numpy as np
+➤ Imports pandas for data handling and numpy for numerical operations.
+
+Python
+df = pd.read_csv('airquality_data.csv', encoding='cp1252')
+➤ Loads the air quality CSV file into a DataFrame. encoding='cp1252' handles Windows-style special characters in the file to prevent Unicode errors.
+
+Python
+df.head()
+➤ Displays the first 5 rows of the DataFrame to get a quick preview of the data and column structure.
+
+Python
+df.info()
+➤ Prints a concise summary: total entries, column names, non-null counts, and data types (dtypes) of each column. Useful to spot mixed types and memory usage.
+
+Python
+df.columns
+➤ Returns an Index object listing all column names in the DataFrame: stn_code, sampling_date, state, location, agency, type, so2, no2, rspm, spm, location_monitoring_station, pm2_5, date.
+
+Data Cleaning
+Python
+df['so2'] = df['so2'].astype('float32')
+df['no2'] = df['no2'].astype('float32')
+df['rspm'] = df['rspm'].astype('float32')
+df['spm'] = df['spm'].astype('float32')
+df['date'] = df['date'].astype('string')
+➤ Converts numeric columns from float64 to float32 to reduce memory usage (space complexity optimization). Also converts the date column to string type for uniform handling.
+
+Python
+df.info()
+➤ Checks that the type conversions were successful — memory usage drops from 43.2MB to 36.6MB.
+
+Python
+df = df.drop_duplicates()
+➤ Removes all duplicate rows from the DataFrame, keeping only the first occurrence of each repeated row.
+
+Python
+df.isna().sum()
+➤ Counts the number of NaN (missing) values in each column. Reveals that pm2_5 has 425,754 missing values, spm has 236,908, agency has 149,466, etc.
+
+Python
+percent_missing = df.isnull().sum() * 100 / len(df)
+➤ Calculates the percentage of missing values per column by multiplying the count of nulls by 100 and dividing by total rows.
+
+Python
+percent_missing.sort_values(ascending=False)
+➤ Sorts columns by their missing percentage in descending order. pm2_5 has ~97.8% missing — the most problematic column.
+
+Python
+df = df.drop(['stn_code','agency','sampling_date','location_monitoring_station','pm2_5'], axis=1)
+➤ Drops 5 columns that have too many missing values or are not useful for analysis. axis=1 means columns are dropped (axis=0 would drop rows).
+
+Python
+df.head()
+➤ Verifies the drop — now the DataFrame has 8 columns: state, location, type, so2, no2, rspm, spm, date.
+
+Python
+df.columns
+➤ Lists the remaining column names after dropping the unwanted ones.
+
+Python
+col_var = ['state','location','type','date']
+col_num = ['so2','no2','rspm','spm']
+➤ Categorizes remaining columns into two lists — categorical/object columns and numerical columns — for easier processing later.
+
+Python
+for col in df.columns:
+    if df[col].dtype == 'object' or df[col].dtype == 'string':
+        df[col] = df[col].fillna(df[col].mode()[0])
+    else:
+        df[col] = df[col].fillna(df[col].mean())
+➤ Fills missing values: for text/categorical columns, fills NaN with the most frequent value (mode). For numeric columns, fills NaN with the column's average (mean). This is called imputation.
+
+Python
+df.isna().sum()
+➤ Verifies that all missing values have been filled — all columns should now show 0 nulls.
+
+Python
+df
+➤ Displays the cleaned DataFrame with 435,068 rows and 8 columns, all nulls filled.
+
+Data Integration
+Python
+subSet1 = df[['state','type']]
+subSet2 = df[['state','location']]
+➤ Creates two subsets: subSet1 with state and type columns, subSet2 with state and location columns — for demonstrating concatenation.
+
+Python
+subSet1.head()
+subSet2.head()
+➤ Previews the first 5 rows of each subset to confirm their structure.
+
+Python
+concatenated_df = pd.concat([subSet1, subSet2], axis=1)
+➤ Concatenates the two subsets side-by-side (axis=1 means column-wise). The result has 4 columns: state, type, state, location. Note: 'state' column appears twice.
+
+Python
+concatenated_df
+➤ Displays the concatenated DataFrame with 435,068 rows and 4 columns.
+
+Error Correcting (Outlier Removal)
+Python
+def remove_outliers(column):
+    Q1 = column.quantile(0.25)
+    Q3 = column.quantile(0.75)
+    IQR = Q3 - Q1
+    threshold = 1.5 * IQR
+    outlier_mask = (column < Q1 - threshold) | (column > Q3 + threshold)
+    return column[~outlier_mask]
+➤ Defines a function to remove outliers using the IQR method. Q1=25th percentile, Q3=75th percentile, IQR=Q3-Q1. Values below Q1-1.5IQR or above Q3+1.5IQR are considered outliers. The function returns only the non-outlier values.
+
+Python
+df.columns
+➤ Lists column names to identify which numeric columns to apply outlier removal on.
+
+Python
+col_name = ['so2','no2','rspm','spm']
+for col in col_name:
+    df[col] = remove_outliers(df[col])
+➤ Applies the remove_outliers() function to each numeric column using a loop. Outlier values are replaced with NaN (since the filtered series doesn't align perfectly with the original index).
+
+Python
+import seaborn as sns
+import matplotlib.pyplot as plt
+➤ Imports seaborn for statistical visualization and matplotlib for plotting — both needed to draw the box plots.
+
+Python
+plt.figure(figsize=(10,6))
+for col in col_name:
+    sns.boxplot(data=df[col])
+    plt.title(col)
+    plt.show()
+➤ Draws a box plot for each numeric column (so2, no2, rspm, spm) after outlier removal. Box plots visually show the distribution — median, IQR, and any remaining outliers.
+
+Data Transform
+Python
+from sklearn.preprocessing import LabelEncoder
+col_label = ['state','location','type']
+encoder = LabelEncoder()
+for col in df.columns:
+    df[col] = encoder.fit_transform(df[col])
+➤ Imports LabelEncoder from sklearn and uses it to convert all categorical text columns into numeric labels. Each unique string value gets assigned an integer (e.g., 'Andhra Pradesh'→0, 'West Bengal'→35). This is required for machine learning models which need numeric input.
+
+Python
+df
+➤ Displays the fully transformed DataFrame — all columns are now numeric (integers and floats). 435,068 rows × 8 columns.
+
+❤️ Assignment B2 (Heart) – Heart Disease Dataset (Logistic Regression)
+Commands & Explanations
+Python
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.linear_model import LogisticRegression
+import seaborn as sns
+import matplotlib.pyplot as plt
+➤ Imports all necessary libraries: numpy (math), pandas (data), sklearn modules for ML (splitting, encoding, metrics, regression), matplotlib and seaborn for plotting.
+
+Python
+df = pd.read_csv('Heart.csv')
+df.head()
+➤ Loads the Heart disease dataset into a DataFrame and previews the first 5 rows. Columns include: age, sex, cp (chest pain), trtbps (blood pressure), chol, fbs, restecg, thalachh (max heart rate), exng, oldpeak, slp, caa, thall, output.
+
+Data Cleaning
+Python
+df = df.drop_duplicates()
+➤ Removes any duplicate rows from the dataset to avoid bias in the model.
+
+Python
+df.describe()
+➤ Shows count, mean, std, min, 25%/50%/75% percentiles, and max for each numeric column. Helps understand the scale and spread of data.
+
+Python
+df.info()
+➤ Shows column names, non-null counts, and data types. Confirms 302 entries, 14 columns, no null values — a clean dataset.
+
+Python
+df.isna().sum()
+➤ Counts missing values per column. All columns return 0 — confirming there are no missing values in this dataset.
+
+Data Integration
+Python
+df.head()
+➤ Displays the first 5 rows again for reference before subsetting.
+
+Python
+df.fbs.unique()
+➤ Returns unique values in the 'fbs' (fasting blood sugar) column. Result: [1, 0] — a binary column.
+
+Python
+subSet1 = df[['age','cp','chol','thalachh']]
+➤ Creates a subset with columns related to physical attributes: age, chest pain type, cholesterol, and maximum heart rate achieved.
+
+Python
+subSet2 = df[['exng','slp','output']]
+➤ Creates a second subset with exercise-induced angina, slope of peak exercise ST segment, and output (target/label) columns.
+
+Python
+merged_df = subSet1.merge(right=subSet2, how='cross')
+merged_df.head()
+➤ Performs a cross join — every row of subSet1 is paired with every row of subSet2. With 302 rows in each subset, this creates 302×302 = 91,204 rows. Useful for generating all possible feature combinations.
+
+Error Correcting (Outlier Removal)
+Python
+df.columns
+➤ Lists all 14 column names to decide which ones need outlier treatment.
+
+Python
+def remove_outliers(column):
+    Q1 = column.quantile(0.25)
+    Q3 = column.quantile(0.75)
+    IQR = Q3 - Q1
+    threshold = 1.5 * IQR
+    outlier_mask = (column < Q1 - threshold) | (column > Q3 + threshold)
+    return column[~outlier_mask]
+➤ Same IQR-based outlier removal function as before. Returns the series with outlier values removed. Q1-1.5IQR is the lower fence, Q3+1.5IQR is the upper fence.
+
+Python
+col_name = ['cp','thalachh','exng','oldpeak','slp','caa']
+for col in col_name:
+    df[col] = remove_outliers(df[col])
+➤ Applies outlier removal to 6 selected numeric columns using a loop. These columns are chosen because they are continuous/ordinal and likely to have outliers that affect model accuracy.
+
+Python
+plt.figure(figsize=(10,6))
+for col in col_name:
+    sns.boxplot(data=df[col])
+    plt.title(col)
+    plt.show()
+➤ Plots a box plot for each of the 6 columns after outlier removal to visually confirm that extreme values have been handled.
+
+Python
+df = df.dropna()
+➤ Drops all rows that contain any NaN value (which were introduced when outliers were removed and replaced with NaN). This reduces the dataset from 302 to ~275 rows (approx).
+
+Python
+df.isna().sum()
+➤ Confirms there are no remaining null values after dropna(). All columns show 0.
+
+Python
+df = df.drop('fbs', axis=1)
+➤ Drops the 'fbs' (fasting blood sugar) column — it was found to have the lowest correlation with the output variable, making it less useful as a feature.
+
+Python
+correlations = df.corr()['output'].drop('output')
+print('Correlation with the Target:')
+print(correlations)
+➤ Computes the Pearson correlation coefficient between each feature and the target variable 'output'. Shows which features are most strongly correlated: cp (+0.41), thalachh (+0.38), caa (-0.46), exng (-0.44), oldpeak (-0.44).
+
+Python
+plt.figure(figsize=(8,6))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.show()
+➤ Plots a color-coded heatmap of all pairwise correlations. 'annot=True' shows correlation values in each cell. 'coolwarm' colormap: red=positive correlation, blue=negative. Helps identify which features are correlated with each other.
+
+Data Split
+Python
+x = df[['cp','thalachh','exng','oldpeak','slp','caa']]
+y = df.output
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+➤ Selects 6 feature columns (the most correlated ones) as X and 'output' as the target y. Splits into 80% training data and 20% test data. random_state=0 ensures reproducibility. Result: x_train(220,6), x_test(55,6).
+
+Data Transformation
+Python
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+x_train_scaled = scaler.fit_transform(x_train)
+x_test_scaled = scaler.transform(x_test)
+➤ Applies StandardScaler to normalize features: (value - mean) / std deviation. fit_transform() learns the mean and std from training data and scales it. transform() applies the same scaling to test data (without re-learning). This prevents data leakage.
+
+Data Model Building
+Python
+y_train = np.array(y_train).reshape(-1, 1)
+y_test = np.array(y_test).reshape(-1, 1)
+➤ Converts the target arrays from 1D shape (220,) to 2D shape (220,1). Some sklearn functions require this shape for the target variable.
+
+Python
+y_train.shape
+➤ Confirms the shape of y_train is (220, 1) — 220 training samples, 1 output column.
+
+Python
+model = LogisticRegression()
+model.fit(x_train_scaled, y_train)
+y_pred = model.predict(x_test_scaled)
+➤ Creates a Logistic Regression model, trains it on scaled training data, then predicts output for scaled test data. Logistic Regression is used for binary classification (output: 0 or 1 — no heart disease vs. heart disease).
+
+Python
+accuracy = accuracy_score(y_test, y_pred)
+print('Accuracy:', accuracy)
+➤ Computes the accuracy of the Logistic Regression model. Accuracy = (correct predictions / total predictions). Result: ~0.836 (83.6%).
+
+Python
+tc = DecisionTreeClassifier(criterion='entropy')
+tc.fit(x_train_scaled, y_train)
+y_pred = tc.predict(x_test_scaled)
+print('Training Accuracy Score:', accuracy_score(y_pred, y_test))
+print('Training Confusion Matrix:', confusion_matrix(y_pred, y_test))
+➤ Builds a Decision Tree model using entropy (information gain) as the splitting criterion. Trains and predicts, then prints accuracy (~81.8%) and the confusion matrix [[21,4],[6,24]] which shows: 21 true negatives, 24 true positives, 4 false positives, 6 false negatives.
