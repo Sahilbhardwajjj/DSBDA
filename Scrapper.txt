@@ -1,0 +1,146 @@
+1. Install Required Libraries
+!pip install requests beautifulsoup4
+Explanation
+Installs requests library.
+Installs beautifulsoup4 library.
+Used for web scraping.
+
+2. Import Libraries
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+Explanation
+Imports Pandas for data handling.
+Imports Requests for sending HTTP requests.
+Imports BeautifulSoup for parsing HTML pages.
+
+3. Store Website URL
+url = "https://books.toscrape.com/catalogue/page-2.html"
+Explanation
+Stores webpage link into variable url.
+Website contains book information.
+
+4. Send Request to Website
+res = requests.get(url)
+Explanation
+Sends GET request to webpage.
+Retrieves webpage content.
+Stores response in variable res.
+
+5. Check Status Code
+res.status_code
+Explanation
+Checks if webpage loaded successfully.
+Status code 200 means success.
+
+6. Parse HTML Content
+soup = BeautifulSoup(res.text, "html.parser")
+Explanation
+Converts HTML content into structured format.
+html.parser parses webpage HTML.
+Stores parsed content in soup.
+
+7. Print Page Title
+print(soup.title)
+Explanation
+Displays webpage title.
+Used to verify webpage data.
+
+8. Select Article Links
+soup.select("article a")
+Explanation
+Selects all anchor tags inside article tags.
+Used to extract webpage links.
+
+9. Find All Book Articles
+books = soup.find_all("article", class_="product_pod")
+Explanation
+Finds all book records from webpage.
+Searches article tags with class product_pod.
+
+10. Create Empty List
+data = []
+Explanation
+Creates empty list.
+Used to store extracted data.
+
+11. Extract Book Details
+for book in books:
+    title = book.h3.a["title"]
+    price = book.find("p", class_="price_color").text
+    
+    rating_class = book.find("p")["class"][1]
+    
+    data.append({
+        "Product Name": title,
+        "Price": price,
+        "Rating": rating_class
+    })
+Explanation
+Loops through each book.
+Extracts title, price, and rating.
+Stores extracted data into list.
+
+12. Create DataFrame
+df = pd.DataFrame(data)
+Explanation
+Converts list data into DataFrame.
+Makes data easy to analyze.
+
+13. Display DataFrame
+df
+Explanation
+Displays extracted book data.
+
+14. Remove Currency Symbol
+df['Price']= df['Price'].str.replace('Â£','')
+Explanation
+Removes pound symbol from price column.
+Keeps only numeric price values.
+
+15. Import Random Module
+import random
+Explanation
+Imports random library.
+Used to generate random values.
+
+16. Create Name List
+names = ["Amit", "Riya", "John", "Sara", "Rahul"]
+Explanation
+Creates list of customer names.
+
+17. Create Comment List
+comments = [
+    "Excellent product!",
+    "Worth the price",
+    "Not bad",
+    "Could be better",
+    "Highly recommended"
+]
+Explanation
+Creates list of review comments.
+
+18. Add Random Customer Names
+df["Customer Name"] = [random.choice(names) for _ in range(len(df))]
+Explanation
+Randomly assigns customer names.
+Adds new column Customer Name.
+
+19. Add Random Reviews
+df["Review"] = [random.choice(comments) for _ in range(len(df))]
+Explanation
+Randomly assigns reviews.
+Adds new column Review.
+
+20. Create Comment Tags
+df["Comment Tag"] = df["Review"].apply(lambda x: "Positive" if "Excellent" in x or "recommended" in x else "Neutral")
+Explanation
+Creates sentiment tags.
+Positive reviews marked as Positive.
+Other reviews marked as Neutral.
+
+21. Save Data to CSV File
+df.to_csv("book_reviews.csv", index=False)
+Explanation
+Saves DataFrame into CSV file.
+index=False removes index column.
