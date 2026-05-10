@@ -1,0 +1,104 @@
+Assignment 1 – Heart Dataset
+
+1. Import Pandas Library
+import pandas as pd
+Explanation
+Imports the Pandas library.
+pd is an alias used to call pandas functions easily.
+Used for data handling and analysis.
+
+2. Read CSV File
+df = pd.read_csv('heart.csv')
+Explanation
+Reads the heart.csv dataset.
+Stores dataset into variable df.
+df means DataFrame.
+
+3. Display Dataset
+df
+Explanation
+Displays all rows and columns of dataset.
+Used to check dataset contents.
+
+4. Remove Duplicate Records
+df = df.drop_duplicates()
+Explanation
+Removes duplicate rows from dataset.
+Keeps only unique records.
+Makes data cleaner.
+
+5. Display Dataset Again
+df
+Explanation
+Displays cleaned dataset after duplicate removal.
+
+6. Check Null Values
+df.isna().sum()
+Explanation
+Checks missing/null values in each column.
+isna() finds null values.
+sum() counts total null values.
+
+
+Assignment 2 – Air Quality Dataset
+
+1. Import Pandas Library
+import pandas as pd
+Explanation
+Imports Pandas library for data analysis.
+pd is shortcut name.
+
+2. Import NumPy Library
+import numpy as np
+Explanation
+Imports NumPy library.
+Used for numerical operations.
+np is alias for NumPy.
+
+3. Read CSV File
+df = pd.read_csv('AirQuality_visualization.csv', delimiter=';')
+Explanation
+Reads Air Quality dataset.
+delimiter=';' means values are separated using semicolon.
+Stores data into df.
+
+4. Display Dataset
+df
+Explanation
+Displays complete dataset.
+Used for checking rows and columns.
+
+5. Rename Column T
+df = df.rename(columns={'T': 'Temperature'})
+Explanation
+Renames column T to Temperature.
+Makes column names more understandable.
+
+6. Rename Column RH
+df = df.rename(columns={'RH': 'Relative Humidity'})
+Explanation
+Changes column name RH to Relative Humidity.
+Improves readability.
+
+7. Rename Column AH
+df = df.rename(columns={'AH': 'Absolute Humidity'})
+Explanation
+Renames AH column.
+Full form becomes Absolute Humidity.
+
+8. Display Dataset Again
+df
+Explanation
+Displays updated dataset after renaming columns.
+
+9. Drop Unwanted Columns
+df = df.drop(['Unnamed: 15', 'Unnamed: 16'], axis=1)
+Explanation
+Removes unnecessary columns.
+axis=1 means columns are removed.
+Makes dataset cleaner.
+
+10. Display Dataset Again
+df
+Explanation
+Displays final cleaned dataset.
